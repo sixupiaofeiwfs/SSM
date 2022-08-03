@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       ">
+
+
+
+    <!--扫描注解组件(除控制层外)-->
+    <context:component-scan base-package="com.wfs">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--引入jdbc.properties-->
+    <context:property-placeholder location="classpath:jdbc.properties"></context:property-placeholder>
+
+    <!--配置数据源-->
+    <bean id="datasource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+
+    <!--整合mybatis-->
+    <!--配置SqlSessionFactoryBean   可以直接在spring的IOC中获取SqlSessionFactory对象-->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--设置mybatis的核心配置文件  在这里设置属性之后,mybatis.config.xml就可以删除掉相应的属性了-->
+        <property name="configLocation" value="classpath:mybatis.config.xml"></property>
+        <property name="dataSource" ref="datasource"></property>
+        <!--设置类型别名所对应的包-->
+        <property name="typeAliasesPackage" value="com.wfs.pojo"></property>
+        <!---->
+
+    </bean>
+
+    <!--配置mapper接口的扫描-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.wfs.mapper"></property>
+        <!--上面的设置可以将这个包下所有的mapper接口通过上面配置的SqlSessionFactory创建出来的SqlSession,然后再通过SqlSession创建出代理对象,并将这些对象交给springIOC控制-->
+    </bean>
+
+
+
+
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="datasource"></property>
+    </bean>
+    <!--开启事物的注解驱动-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>
